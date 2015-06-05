@@ -1,0 +1,8 @@
+Dokumentacja projektu Haskell
+
+Dokumentacja projektu z haskell
+
+zainstalować pakiet hmatrix:
+sudo apt-get install libghc-cabal-dev
+cabal update
+cabal install matrix
