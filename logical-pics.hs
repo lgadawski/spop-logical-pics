@@ -10,8 +10,6 @@ main = do
 		--[[3], [2, 2], [2, 2], [3], [1], [1], [1], [1], [2], [3]] 
 		--[[2, 1], [4, 2], [1, 7], [4], [2]]
 
---[1, 0, 2, 1, 2, 1] [1, 1, 2, 1, 1, 1] [(0, 1), (3, 2), (3, 4), (4, 0), (4, 4), (5, 2), (5, 5)] )
-
 -- Funkcja inicująca metodę znajdująca wszystkie zamalowane punkty
 findAllHash ys xs =  findAllHash' ys xs (matrix (length ys) (length xs) $ \(_,_) -> 0)
 
@@ -57,7 +55,3 @@ getListsDuplicates [] _ = []
 getListsDuplicates _ [] = []
 getListsDuplicates (x:xs) y | x `elem` y = [x] ++ getListsDuplicates xs y
 						  	| otherwise = getListsDuplicates xs y
-
---matrix (length yx) (length xs) $ \(i,j) -> 0
-
---findPretendents :: [Int] -> [Int] -> [(Int,Int)] -> [(Int,Int)] -> [(Int,Int)]
