@@ -1,10 +1,11 @@
 import Data.Matrix
 import qualified Data.Vector
 import qualified Debug.Trace 
+import qualified Data.Vector.Generic
 
 main = do
 	print (findAllHash 
-			[1, 4, 3, 2]
+			[2, 4, 3, 1]
 			[2, 3, 2, 3])
 			--[[1], [4], [3], [2]]
 			--[[2], [3], [2], [3]])
@@ -13,19 +14,38 @@ main = do
 findAllHash ys xs =  findAllHash' ys xs (matrix (length ys) (length xs) $ \(_,_) -> 0)
 
 findAllHash' :: [Int] -> [Int] -> Matrix Int -> Matrix Int
-findAllHash' ys xs result = 
-	--(findAllHash' ys xs (fillAllCols xs (fillAllRows ys result)))
-	(Debug.Trace.trace (prettyMatrix result) 
-		(findAllHash' ys xs 
-			(fillIntersections ys 1 (length ys) xs 1 (length xs) (fillAllCols 1 xs (fillAllRows 1 ys result)))))
---findAllHash' ys xs result = findAllHash' ys xs (fillAllRows ys (fillAllCols xs result))
+findAllHash' ys xs result | isAllBoardFilled result = result
+						  | otherwise = (Debug.Trace.trace (prettyMatrix result) 
+								(findAllHash' ys xs 
+									(fill2IfMaxVals ys 1 xs
+										(fillIntersections ys 1 (length ys) xs 1 (length xs) (fillAllCols 1 xs (fillAllRows 1 ys result))))))
+
+fill2IfMaxVals :: [Int] -> Int -> [Int] -> Matrix Int -> Matrix Int
+fill2IfMaxVals [] _ _ result = result
+fill2IfMaxVals (y:ys) rowIndex xs result =
+		fill2IfMaxVals
+			ys 	
+			(rowIndex+1) 
+			xs 
+			(fill2InRow (sum (Data.Vector.Generic.toList (getRow rowIndex result)))
+						(Data.Vector.Generic.toList (getRow rowIndex result)) 
+						y
+						rowIndex 
+						1
+						result)
+
+-- wstawia 2 jesli w wierszu jest juz konieczna ilosc jedynek
+fill2InRow :: Int -> [Int] -> Int -> Int -> Int -> Matrix Int -> Matrix Int
+fill2InRow _ [] _ _ _ result = result
+fill2InRow listSum (a:as) val rowIndex colIndex result
+	| listSum > val = result
+	| (listSum == val) && (a == 0) = fill2InRow listSum as val rowIndex (colIndex+1) (setElem 2 (rowIndex, colIndex) result)
+	| otherwise = fill2InRow listSum as val rowIndex (colIndex+1) result
 
 -- funkcja sprawdzająca czy cała plansza jest wypełniona
-isAllBoardFilled :: [Int] -> [Int] -> Matrix Int -> Bool
-isAllBoardFilled [] _ _ = True
-isAllBoardFilled _ [] _ = True
-isAllBoardFilled (y:ys) xs result | y == (Data.Vector.sum (getRow y result)) = False
-									  | otherwise = isAllBoardFilled ys xs result
+-- jeśli na każdej pozycji jest wartość większa niż 0 to KONIEC
+isAllBoardFilled :: Matrix Int -> Bool
+isAllBoardFilled result = all (>0) (toList result)
 
 -- funkcja wypelniajaca linie w calosci w przypadku gdy liczba pozycji do zamalowania rowna 
 -- jest dlugosci wiersza
