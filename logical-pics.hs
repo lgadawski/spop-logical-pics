@@ -16,31 +16,55 @@ findAllHash ys xs =  findAllHash' ys xs (matrix (length ys) (length xs) $ \(_,_)
 findAllHash' :: [Int] -> [Int] -> Matrix Int -> Matrix Int
 findAllHash' ys xs result | isAllBoardFilled result = result
 						  | otherwise = (Debug.Trace.trace (prettyMatrix result) 
-								(findAllHash' ys xs 
-									(fill2IfMaxVals ys 1 xs
+								(findAllHash' ys xs
+									(fill2IfMaxVals ys 1 xs 1
 										(fillIntersections ys 1 (length ys) xs 1 (length xs) (fillAllCols 1 xs (fillAllRows 1 ys result))))))
 
-fill2IfMaxVals :: [Int] -> Int -> [Int] -> Matrix Int -> Matrix Int
-fill2IfMaxVals [] _ _ result = result
-fill2IfMaxVals (y:ys) rowIndex xs result =
+fill2IfMaxVals :: [Int] -> Int -> [Int] -> Int -> Matrix Int -> Matrix Int
+fill2IfMaxVals [] _ [] _ result = result
+fill2IfMaxVals [] rowIndex (x:xs) colIndex result =
 		fill2IfMaxVals
-			ys 	
+			[]
+			rowIndex
+			xs
+			(colIndex+1)
+			(fill2InCol (countOneVals (Data.Vector.Generic.toList (getCol colIndex result)))
+						(Data.Vector.Generic.toList (getCol colIndex result)) 
+						x
+						colIndex 
+						1
+						result)
+fill2IfMaxVals (y:ys) rowIndex xs colIndex result =
+		fill2IfMaxVals
+			ys
 			(rowIndex+1) 
 			xs 
-			(fill2InRow (sum (Data.Vector.Generic.toList (getRow rowIndex result)))
+			colIndex 
+			(fill2InRow (countOneVals (Data.Vector.Generic.toList (getRow rowIndex result)))
 						(Data.Vector.Generic.toList (getRow rowIndex result)) 
 						y
 						rowIndex 
 						1
 						result)
 
+-- zwraca liczbe '1' w liscie
+countOneVals :: [Int] -> Int
+countOneVals as = length (filter (==1) as)
+
 -- wstawia 2 jesli w wierszu jest juz konieczna ilosc jedynek
+fill2InCol :: Int -> [Int] -> Int -> Int -> Int -> Matrix Int -> Matrix Int
+fill2InCol _ [] _ _ _ result = result
+fill2InCol oneCount (a:as) val colIndex rowIndex result
+	| (oneCount == val) && (a == 0) = fill2InCol oneCount as val colIndex (rowIndex+1) (setElem 2 (rowIndex, colIndex) result)
+	| otherwise = fill2InCol oneCount as val colIndex (rowIndex+1) result
+
+-- wstawia 2 jesli w wierszu jest juz konieczna ilosc jedynek
+-- analogicznie jak fill2InRow, pewnie da się jakoś ładnie przekazać funkcje i zrobić z tych funkcji zrobić jedną
 fill2InRow :: Int -> [Int] -> Int -> Int -> Int -> Matrix Int -> Matrix Int
 fill2InRow _ [] _ _ _ result = result
-fill2InRow listSum (a:as) val rowIndex colIndex result
-	| listSum > val = result
-	| (listSum == val) && (a == 0) = fill2InRow listSum as val rowIndex (colIndex+1) (setElem 2 (rowIndex, colIndex) result)
-	| otherwise = fill2InRow listSum as val rowIndex (colIndex+1) result
+fill2InRow oneCount (a:as) val rowIndex colIndex result
+	| (oneCount == val) && (a == 0) = fill2InRow oneCount as val rowIndex (colIndex+1) (setElem 2 (rowIndex, colIndex) result)
+	| otherwise = fill2InRow oneCount as val rowIndex (colIndex+1) result
 
 -- funkcja sprawdzająca czy cała plansza jest wypełniona
 -- jeśli na każdej pozycji jest wartość większa niż 0 to KONIEC
